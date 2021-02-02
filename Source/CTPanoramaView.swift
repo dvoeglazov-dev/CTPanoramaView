@@ -67,6 +67,8 @@ import ImageIO
             resetCameraAngles()
         }
     }
+    
+    public var invertZMotion: Bool = false
 
     // MARK: Private properties
 
@@ -250,7 +252,7 @@ import ImageIO
                         panoramaView.cameraNode.eulerAngles = SCNVector3Make(0, panoramaView.startAngle + Float(-userHeading), 0)
                     } else {
                         // Use quaternions when in spherical mode to prevent gimbal lock
-                        panoramaView.cameraNode.orientation = motionData.orientation()
+                        panoramaView.cameraNode.orientation = motionData.orientation(flipVertical: panoramaView.invertZMotion)
                     }
                     panoramaView.reportMovement(CGFloat(userHeading), panoramaView.xFov.toRadians())
                 }
@@ -324,11 +326,11 @@ import ImageIO
 
 private extension CMDeviceMotion {
 
-    func orientation() -> SCNVector4 {
+    func orientation(flipVertical: Bool) -> SCNVector4 {
 
-        let attitude = self.attitude.quaternion
-        let attitudeQuanternion = GLKQuaternion(quanternion: attitude)
-
+        let q = self.attitude.quaternion
+        let attitude = flipVertical ? CMQuaternion(x: q.x, y: q.y, z: -q.z, w: q.w) : q
+        let attitudeQuanternion = GLKQuaternion(quanternion: attitude)        
         let result: SCNVector4
 
         switch UIApplication.shared.statusBarOrientation {
